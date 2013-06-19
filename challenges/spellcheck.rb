@@ -84,7 +84,7 @@ end
 
 loop do
   print "> "
-  s = gets.chomp
+  s = gets.downcase.chomp
   puts @dictionary.find(s) || "NO SUGGESTION"
 end
 
