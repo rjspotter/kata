@@ -1,0 +1,22 @@
+inherit_gem:
+  rubocop-rails:
+    - config/rails.yml
+
+AllCops:
+  Excludes:
+    - db/*
+    - bin/*
+    - config/**/*
+    - Rakefile
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+Layout/EmptyLinesAroundClassBody:
+  Enabled: false
+
+Layout/SpaceBeforeBlockBraces:
+  Enabled: false
+
+Layout/EmptyLinesAroundModuleBody:
+  Enabled: false
