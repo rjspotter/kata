@@ -25,23 +25,26 @@ defmodule Solution do
   def main do
     n = do_read_int()
     lst = do_read_all_int()
-    out = repeater(n, lst)
+    out = my_filter(lst, fn(x) -> x < n end)
     Enum.each(out, &(IO.puts/1))
   end
 
-  def repeater(n, src) do
-    repeater(n, src, [])
+  def my_filter(input, fun) do
+    my_filter(input, fun, [])
   end
 
-  def repeater(_n, [], acc) do
-    acc
-    |> Enum.reverse
-    |> List.flatten
+  def my_filter([], _fun, acc) do
+    Enum.reverse(acc)
   end
 
-  def repeater(n, [x | src], acc) do
-    repeater(n, src, [List.duplicate(x, n) | acc])
+  def my_filter([x | input], fun, acc) do
+    if fun.(x) do
+      my_filter(input, fun, [x | acc])
+    else
+      my_filter(input, fun, acc)
+    end
   end
+
 
 end
 
