@@ -100,3 +100,18 @@ function build_tree(df, ignore=[], depth=0)
 end
 
 # tree = build_tree(dataframe, [:id, :sqft_lot15, :sqft_living15, :date]) && true
+
+function treewalk(item, branch::Array, value=0)
+  branch
+end
+
+function treewalk(item, branch::Dict, value=0)
+  ks = tree |> keys |> collect
+  if ks |> size |> first == 1
+    key = ks |> first
+    treewalk(item, branch[key], (item[key] |> first))
+  else
+    filter(x -> inpartition(value, x), ks)
+  end
+end
+
