@@ -13,7 +13,7 @@ using DebuggerFramework
 const global dataframe = open("/home/ubuntu/data/kc_house_data/kc_house_data.csv") |> CSV.File |> DataFrame
 
 const global label = :price
-const global threashold = 500
+const global threashold = 2500
 const global max_branches = 10
 
 function partition(feature_values)
@@ -28,7 +28,10 @@ function partition(feature_values)
     snd = fst + step
     while snd < max
       # println(" fst: $fst ,  snd: $snd ,  max: $max ,  step: $step , ")
-      push!(acc, (first = fst, second = snd))
+      proposed = (first = fst, second = snd)
+      if (filter(x -> inpartition(proposed, x), feature_values) |> size |> first) > 0
+        push!(acc, proposed)
+      end
       fst = snd
       snd = snd + step
     end
@@ -64,10 +67,10 @@ function infogain(df, feature)
   end
 end
 
-function gainz(df, ignore)
+function gainz(df)
   acc = Dict()
   for n in names(df)
-    if n == label || n in ignore
+    if n == label
       #nop
     else
       acc[n] = infogain(df, n)
@@ -76,9 +79,9 @@ function gainz(df, ignore)
   acc
 end
 
-function next_feature(feature_entropies, ignore)
+function next_feature(feature_entropies)
   function largest(a, b)
-    if b.first in ignore
+    if b.first == label
       a
     else
       a.second > b.second ? a : b
@@ -88,28 +91,16 @@ function next_feature(feature_entropies, ignore)
   candidate.first
 end
 
-function build_tree(df, ignore=[], depth=0)
-  max_depth = (df |> names |> size |> first) - (ignore |> size |> first) - 1
-  println("==================================")
-  println(depth)
-  println(maxdepth)
-  println("==================================")
-  if (std(df[label]) < threashold) || depth >= max_depth
+function build_tree(df)
+  if (std(df[label]) < threashold) || (df |> names |> size |> first) < 2 || (df[label] |> size |> first) < 12
     df[label]
   else
-    feature = next_feature(gainz(df, ignore), ignore)
+    feature = df |> gainz |> next_feature
     new_nodes = Dict()
     for v in partition(df[feature])
       subframe = filter(x -> inpartition(v, x[feature]), df)
-      new_ignore = cat(ignore, feature, dims=1)
-      subtree = build_tree(subframe, new_ignore, (depth + 1))
-      # println("===========================")
-      # println(depth)
-      # println(feature)
-      # println(v)
-      # println(names(subframe))
-      # println(new_ignore)
-      # println("===========================")
+      deletecols!(subframe, feature)
+      subtree = build_tree(subframe)
       new_nodes[v] = subtree
     end
     Dict(feature => new_nodes)
@@ -121,12 +112,20 @@ function treewalk(item, branch::Array, value=0)
 end
 
 function treewalk(item, branch::Dict, value=0)
+  println(item[:id])
   ks = (branch |> keys |> collect)
-  if (ks |> size |> first) == 1
+  if (ks |> size |> first) < 1
+    (item, branch, value)
+  elseif (ks |> size |> first) == 1 && (ks |> first |> typeof) == Symbol
     ky = ks |> first
+    println(ky)
     new_branch = branch[ky]
     treewalk(item, new_branch, (item[ky] |> first))
   else
+    println("+++++++++++++++")
+    println(value)
+    println(ks)
+    println("---------------")
     ky = filter(x -> inpartition(x, value), ks) |> first
     new_branch = branch[ky]
     treewalk(item, new_branch)
@@ -134,6 +133,15 @@ function treewalk(item, branch::Dict, value=0)
 end
 
 
-# tree = build_tree(dataframe, [:id, :sqft_lot15, :sqft_living15, :date])
-# df = filter(x -> x[:id] == 9834201367, dataframe)
+dc = copy(dataframe)
+for ing in [:id, :sqft_lot15, :sqft_living15, :date]
+  deletecols!(dataframe, ing)
+end
+tree = build_tree(dataframe)
+eachrow(dc) .|> (x -> treewalk(x, tree)) .|> println
+
+df = filter(x -> x[:id] == 1736800520, dc)
 # rng = treewalk(df, tree)
+
+
+
