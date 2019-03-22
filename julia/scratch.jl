@@ -1,42 +1,33 @@
-# x = -3.0:0.1:3.0
-# f(x) = x^2
-# y = f.(x)
-
 using Pkg
 using CSV
 using DataFrames
 using StatsBase
 using Statistics
-using ASTInterpreter2
-using DebuggerFramework
+# using ASTInterpreter2
+# using DebuggerFramework
 
 const global dataframe = open("/home/ubuntu/data/kc_house_data/kc_house_data.csv") |> CSV.File |> DataFrame
 
 const global label = :price
-const global threashold = 2500
-const global max_branches = 10
 
 function partition(feature_values)
-    x = feature_values |> countmap |>  cm -> filter((x -> x.second > 3), cm) |> collect |> size |> first
-  if x <= max_branches
-    feature_values |> unique .|> (x -> (first = x, second = x))
-  else
-    acc = []
-    step = feature_values |> std
-    max = feature_values |> maximum
-    fst = feature_values |> minimum
-    snd = fst + step
-    while snd < max
-      # println(" fst: $fst ,  snd: $snd ,  max: $max ,  step: $step , ")
-      proposed = (first = fst, second = snd)
-      if (filter(x -> inpartition(proposed, x), feature_values) |> size |> first) > 0
-        push!(acc, proposed)
-      end
+  acc = []
+  step = feature_values |> std
+  max = feature_values |> maximum
+  fst = 0 # feature_values |> minimum
+  snd = (feature_values |> minimum) + step
+  while snd < (max - 1)
+    # println(" fst: $fst ,  snd: $snd ,  max: $max ,  step: $step , ")
+    proposed = (first = fst, second = snd)
+    if (filter(x -> inpartition(proposed, x), feature_values) |> size |> first) > 0
+      push!(acc, proposed)
       fst = snd
-      snd = snd + step
     end
-    acc
+    snd = snd + step
   end
+  proposed = (first = fst, second = Inf32)
+  push!(acc, proposed)
+  acc
 end
 
 function inpartition(tup, val)
@@ -91,8 +82,8 @@ function next_feature(feature_entropies)
   candidate.first
 end
 
-function build_tree(df)
-  if (std(df[label]) < threashold) || (df |> names |> size |> first) < 2 || (df[label] |> size |> first) < 12
+function build_tree(df, threashold)
+  if (df |> names |> size |> first) < 2 || (df[label] |> size |> first) < threashold
     df[label]
   else
     feature = df |> gainz |> next_feature
@@ -100,32 +91,37 @@ function build_tree(df)
     for v in partition(df[feature])
       subframe = filter(x -> inpartition(v, x[feature]), df)
       deletecols!(subframe, feature)
-      subtree = build_tree(subframe)
+      subtree = build_tree(subframe, threashold)
       new_nodes[v] = subtree
     end
     Dict(feature => new_nodes)
   end
 end
 
-function treewalk(item, branch::Array, value=0)
-  branch
+function treewalk(item, branch::Union, value=0)
+  sum(branch) / length(branch)
 end
 
+function treewalk(item, branch::Array, value=0)
+  sum(branch) / length(branch)
+end
+
+
 function treewalk(item, branch::Dict, value=0)
-  println(item[:id])
+  # println(item[:id])
   ks = (branch |> keys |> collect)
   if (ks |> size |> first) < 1
     (item, branch, value)
   elseif (ks |> size |> first) == 1 && (ks |> first |> typeof) == Symbol
     ky = ks |> first
-    println(ky)
+    # println(ky)
     new_branch = branch[ky]
     treewalk(item, new_branch, (item[ky] |> first))
   else
-    println("+++++++++++++++")
-    println(value)
-    println(ks)
-    println("---------------")
+    # println("+++++++++++++++")
+    # println(value)
+    # println(ks)
+    # println("---------------")
     ky = filter(x -> inpartition(x, value), ks) |> first
     new_branch = branch[ky]
     treewalk(item, new_branch)
@@ -133,15 +129,19 @@ function treewalk(item, branch::Dict, value=0)
 end
 
 
-dc = copy(dataframe)
-for ing in [:id, :sqft_lot15, :sqft_living15, :date]
-  deletecols!(dataframe, ing)
-end
-tree = build_tree(dataframe)
-eachrow(dc) .|> (x -> treewalk(x, tree)) .|> println
+# test_set = copy(dataframe[1:4323, 1:21])
+# train_set = copy(dataframe[4324:21613, 1:21])
+# for ing in [:id, :sqft_lot15, :sqft_living15, :date, :lat, :long]
+#   deletecols!(train_set, ing)
+# end
 
-df = filter(x -> x[:id] == 1736800520, dc)
-# rng = treewalk(df, tree)
+# tree = build_tree(train_set, 25)
 
+# global myerr = []
+# for i in 1:size(test_set, 1)
+#   item = test_set[i, :]
+#   predict = treewalk(item, tree)
+#   push!(myerr, abs(predict - item[label]))
+# end
 
-
+# println(sum(myerr) / length(myerr))
