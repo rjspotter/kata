@@ -10,14 +10,13 @@ const global dataframe = open("/home/ubuntu/data/kc_house_data/kc_house_data.csv
 
 const global label = :price
 
-function partition(feature_values)
+function large_partition(feature_values)
   acc = []
   step = feature_values |> std
   max = feature_values |> maximum
-  fst = 0 # feature_values |> minimum
+  fst = 0
   snd = (feature_values |> minimum) + step
   while snd < (max - 1)
-    # println(" fst: $fst ,  snd: $snd ,  max: $max ,  step: $step , ")
     proposed = (first = fst, second = snd)
     if (filter(x -> inpartition(proposed, x), feature_values) |> size |> first) > 0
       push!(acc, proposed)
@@ -30,8 +29,33 @@ function partition(feature_values)
   acc
 end
 
+function small_partition(feature_values)
+  feature_values = sort(feature_values)
+  acc = []
+  fst = 0
+  for i in unique(feature_values)
+    snd = i
+    proposed = (first = fst, second = snd)
+    if (filter(x -> inpartition(proposed, x), feature_values) |> size |> first) > 0
+      push!(acc, proposed)
+      fst = snd
+    end
+  end
+  proposed = (first = fst, second = Inf32)
+  push!(acc, proposed)
+  acc
+end
+
+function partition(feature_values)
+  if (feature_values |> unique |> length) > 15
+    large_partition(feature_values)
+  else
+    small_partition(feature_values)
+  end
+end
+
 function inpartition(tup, val)
-  tup.first == val || (val >= tup.first && val < tup.second)
+  (val >= tup.first && val < tup.second)
 end
 
 function entropy(data)
@@ -135,7 +159,7 @@ end
 #   deletecols!(train_set, ing)
 # end
 
-# tree = build_tree(train_set, 25)
+# tree = build_tree(train_set, 12)
 
 # global myerr = []
 # for i in 1:size(test_set, 1)
@@ -145,3 +169,7 @@ end
 # end
 
 # println(sum(myerr) / length(myerr))
+
+
+# Next:  Build the ability for trees to return an "I don't know" answer
+#   create a forrest of overlapping trees
