@@ -106,8 +106,14 @@ function next_feature(feature_entropies)
   candidate.first
 end
 
+function small_difference(df, threashold)
+  min = (df[label] |> minimum)
+  max = (df[label] |> maximum)
+  (max - min) < threashold
+end
+
 function build_tree(df, threashold)
-  if (df |> names |> size |> first) < 2 || (df[label] |> size |> first) < threashold
+  if (df |> names |> size |> first) < 2 || small_difference(df, threashold)
     df[label]
   else
     feature = df |> gainz |> next_feature
@@ -152,24 +158,86 @@ function treewalk(item, branch::Dict, value=0)
   end
 end
 
+function many_trees(full_set, slices)
+  @assert slices > 1
 
-# test_set = copy(dataframe[1:4323, 1:21])
-# train_set = copy(dataframe[4324:21613, 1:21])
+  acc = []
+  max = size(full_set, 1)
+  @assert max > 0
+  @assert typeof(max) == Int64
+
+  slice_size = trunc(Int64, ceil(max / slices))
+  @assert slice_size > 0
+  @assert typeof(slice_size) == Int64
+  lower = 1
+  upper = slice_size
+
+  while lower < max
+    subset = full_set[lower:upper, :]
+    tree = build_tree(subset, 1000)
+    mn = subset[label] |> minimum
+    mx = subset[label] |> maximum
+    push!(acc, (tree = tree, min = mn, max = mx))
+    lower = upper
+    upper = upper + slice_size
+    if upper > max
+      upper = max
+    end
+    @assert upper <= max
+  end
+  acc
+end
+
+# feature_frame = dataframe[dataframe[:bedrooms] .<= 10, :]
+
+# test_set = copy(feature_frame[1:4323, :])
+# train_set = copy(feature_frame[4324:21611, :])
+# # sort!(train_set, label)
 # for ing in [:id, :sqft_lot15, :sqft_living15, :date, :lat, :long]
 #   deletecols!(train_set, ing)
 # end
 
-# tree = build_tree(train_set, 12)
+# trees = many_trees(train_set, 21);
 
 # global myerr = []
 # for i in 1:size(test_set, 1)
 #   item = test_set[i, :]
-#   predict = treewalk(item, tree)
+#   predictions = []
+#   for t in trees
+#     p = treewalk(item, t.tree)
+#     if p == t.min || p == t.max
+#       #nop
+#     else
+#       push!(predictions, p)
+#     end
+#   end
+#   predict = mean(predictions)
 #   push!(myerr, abs(predict - item[label]))
 # end
 
-# println(sum(myerr) / length(myerr))
+# println(mean(myerr))
 
 
 # Next:  Build the ability for trees to return an "I don't know" answer
 #   create a forrest of overlapping trees
+
+function slices(arr, c)
+  max = size(arr, 1)
+  slice_size = trunc(Int64, ceil(max / c))
+  lower = 1
+  upper = slice_size
+  while lower < max
+    subset = arr[lower:upper, :]
+    subset[:A] |> minimum
+    lower = upper
+    next = upper + slice_size
+    if next >= max
+      upper = max
+    else
+      upper = next
+    end
+  end
+end
+
+a = DataFrame(A = 1:81)
+slices(a, 7)
