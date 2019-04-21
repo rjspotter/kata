@@ -170,7 +170,7 @@ function many_trees(full_set, slices)
   @assert slice_size > 0
   @assert typeof(slice_size) == Int64
   lower = 1
-  upper = slice_size
+  upper = slice_size * 2
 
   while lower < max
     subset = full_set[lower:upper, :]
@@ -178,7 +178,7 @@ function many_trees(full_set, slices)
     mn = subset[label] |> minimum
     mx = subset[label] |> maximum
     push!(acc, (tree = tree, min = mn, max = mx))
-    lower = upper
+    lower = lower + slice_size
     upper = upper + slice_size
     if upper > max
       upper = max
@@ -188,56 +188,70 @@ function many_trees(full_set, slices)
   acc
 end
 
-# feature_frame = dataframe[dataframe[:bedrooms] .<= 10, :]
+feature_frame = dataframe[dataframe[:bedrooms] .<= 10, :]
 
-# test_set = copy(feature_frame[1:4323, :])
-# train_set = copy(feature_frame[4324:21611, :])
-# # sort!(train_set, label)
-# for ing in [:id, :sqft_lot15, :sqft_living15, :date, :lat, :long]
-#   deletecols!(train_set, ing)
-# end
-
-# trees = many_trees(train_set, 21);
-
-# global myerr = []
-# for i in 1:size(test_set, 1)
-#   item = test_set[i, :]
-#   predictions = []
-#   for t in trees
-#     p = treewalk(item, t.tree)
-#     if p == t.min || p == t.max
-#       #nop
-#     else
-#       push!(predictions, p)
-#     end
-#   end
-#   predict = mean(predictions)
-#   push!(myerr, abs(predict - item[label]))
-# end
-
-# println(mean(myerr))
-
-
-# Next:  Build the ability for trees to return an "I don't know" answer
-#   create a forrest of overlapping trees
-
-function slices(arr, c)
-  max = size(arr, 1)
-  slice_size = trunc(Int64, ceil(max / c))
-  lower = 1
-  upper = slice_size
-  while lower < max
-    subset = arr[lower:upper, :]
-    subset[:A] |> minimum
-    lower = upper
-    next = upper + slice_size
-    if next >= max
-      upper = max
-    else
-      upper = next
-    end
-  end
+test_set = copy(feature_frame[1:4323, :])
+train_set = copy(feature_frame[4324:21611, :])
+# sort!(train_set, label)
+for ing in [:id, :sqft_lot15, :sqft_living15, :date, :lat, :long]
+  deletecols!(train_set, ing)
 end
 
-a = DataFrame(A = 1:81)
-slices(a, 7)
+trees = many_trees(train_set, 21);
+
+global myerr = []
+for i in 1:size(test_set, 1)
+  item = test_set[i, :]
+  predictions = []
+  for t in trees
+    p = treewalk(item, t.tree)
+    if p == t.min || p == t.max
+      #nop
+    else
+      push!(predictions, p)
+    end
+  end
+  predict = mean(predictions)
+  err = abs(log(predict) - log(item[label]))
+  # if err > 100000
+  #   println(sort(predictions))
+  #   println(predict)
+  #   println(item[label])
+  # end
+  push!(myerr, err)
+end
+
+println(sqrt(mean(myerr.^2.)))
+
+
+# unsorted & sliced
+# julia> println(mean(myerr))
+# 151868.14472280702
+
+# julia> println(sqrt(mean(myerr.^2.)))
+# 280462.39544090594
+
+
+
+# sorted & sliced
+# julia> println(mean(myerr))
+# 235164.47230174634
+
+# julia> println(sqrt(mean(myerr.^2.)))
+# 385158.98424631305
+
+
+# unsorted & overlapping slices
+# julia> println(mean(myerr))
+# 147712.1182026513
+
+# julia> println(sqrt(mean(myerr.^2.)))
+# 264368.5619372746
+
+
+# sorted & overlapping slices
+# julia> println(mean(myerr))
+# 236879.06318660572
+
+# julia> println(sqrt(mean(myerr.^2.)))
+# 379433.6094573489
