@@ -1,12 +1,99 @@
-using Pkg
 using CSV
 using DataFrames
+using Pkg
+using Query
 using StatsBase
 using Statistics
-# using ASTInterpreter2
-# using DebuggerFramework
 
-const global dataframe = open("/home/ubuntu/data/kc_house_data/kc_house_data.csv") |> CSV.File |> DataFrame
+# const global dataframe = open("/home/ubuntu/data/kc_house_data/kc_house_data.csv") |> CSV.File |> DataFrame
+const global dataframe = open("/home/ubuntu/data/house-prices-advanced-regression-techniques/train.csv") |> CSV.File |> DataFrame
+
+mapping = Dict(
+  :MSZoning => Dict(
+    "RP" => 1,
+    "RL" => 2,
+    "RM" => 3,
+    "RH" => 4,
+    "FV" => 5,
+    "A"  => 6,
+    "I"  => 7,
+    "C (all)" => 8
+  ),
+  :Street => Dict("Pave" => 2, "Grvl" => 1, "NA" => 0),
+  :Alley => Dict("Pave" => 2, "Grvl" => 1, "NA" => 0),
+  :LotShape => Dict(
+    "Reg" => 0,
+    "IR1" => 1,
+    "IR2" => 2,
+    "IR3" => 3
+  ),
+  :LandContour => Dict(
+    "Lvl" => 0,
+    "Bnk" => 1,
+    "Low" => 2,
+    "HLS" => 3
+  ),
+  :Utilities => Dict(
+    "AllPub" => 0,
+    "NoSewr" => 1,
+    "NoSeWa" => 2,
+    "ELO"    => 3
+  ),
+  :LotConfig => Dict(
+    "Inside"  => 0,
+    "Corner"  => 1,
+    "CulDSac" => 2,
+    "FR2"     => 3,
+    "FR3"     => 4
+  ),
+  :LandSlope => Dict(
+    "Gtl" => 0,
+    "Mod" => 1,
+    "Sev" => 2
+  ),
+  :Neighborhood => Dict(
+    "CollgCr" => 0,
+    "Veenker" => 1,
+    "Crawfor" => 2,
+    "NoRidge" => 3,
+    "Mitchel" => 4,
+    "Somerst" => 5,
+    "NWAmes"  => 6,
+    "OldTown" => 7,
+    "BrkSide" => 8,
+    "Sawyer"  => 9,
+    "NridgHt" => 10,
+    "NAmes"   => 11,
+    "SawyerW" => 12,
+    "IDOTRR"  => 13,
+    "MeadowV" => 14,
+    "Edwards" => 15,
+    "Timber"  => 16,
+    "Gilbert" => 17,
+    "StoneBr" => 18,
+    "ClearCr" => 19,
+    "NPkVill" => 20,
+    "Blmngtn" => 21,
+    "BrDale"  => 22,
+    "SWISU"   => 23,
+    "Blueste" => 24,
+  )
+)
+function foo(val::Array{Union{Missing, String}})
+  println("tryhing")
+end
+function foo(val::Array{Union{Missing, Number}})
+  println("number")
+end
+function do_map(oldval::String, mapping::Dict)
+  @assert in(oldval, keys(mapping))
+  mapping[oldval]
+end
+
+function na_is_zero(old::String)
+  @assert occursin(r"^NA|[0-9]+$", old)
+  old == "NA" ? 0 : parse(Int64, old)
+end
 
 const global label = :price
 
@@ -138,20 +225,14 @@ end
 
 
 function treewalk(item, branch::Dict, value=0)
-  # println(item[:id])
   ks = (branch |> keys |> collect)
   if (ks |> size |> first) < 1
     (item, branch, value)
   elseif (ks |> size |> first) == 1 && (ks |> first |> typeof) == Symbol
     ky = ks |> first
-    # println(ky)
     new_branch = branch[ky]
     treewalk(item, new_branch, (item[ky] |> first))
   else
-    # println("+++++++++++++++")
-    # println(value)
-    # println(ks)
-    # println("---------------")
     ky = filter(x -> inpartition(x, value), ks) |> first
     new_branch = branch[ky]
     treewalk(item, new_branch)
@@ -186,7 +267,7 @@ function many_trees(full_set, slices)
     @assert upper <= max
   end
   acc
-end
+pend
 
 feature_frame = dataframe[dataframe[:bedrooms] .<= 10, :]
 
@@ -223,6 +304,13 @@ end
 
 println(sqrt(mean(myerr.^2.)))
 
+#unsorted single tree
+# julia> println(mean(myerr))
+# 184383.37709441825
+
+# julia> println(sqrt(mean(myerr.^2.)))
+# 334189.8279692254
+
 
 # unsorted & sliced
 # julia> println(mean(myerr))
@@ -230,7 +318,6 @@ println(sqrt(mean(myerr.^2.)))
 
 # julia> println(sqrt(mean(myerr.^2.)))
 # 280462.39544090594
-
 
 
 # sorted & sliced
@@ -255,3 +342,6 @@ println(sqrt(mean(myerr.^2.)))
 
 # julia> println(sqrt(mean(myerr.^2.)))
 # 379433.6094573489
+
+
+  function 
