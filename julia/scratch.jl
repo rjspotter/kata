@@ -8,95 +8,23 @@ using Statistics
 # const global dataframe = open("/home/ubuntu/data/kc_house_data/kc_house_data.csv") |> CSV.File |> DataFrame
 const global dataframe = open("/home/ubuntu/data/house-prices-advanced-regression-techniques/train.csv") |> CSV.File |> DataFrame
 
-mapping = Dict(
-  :MSZoning => Dict(
-    "RP" => 1,
-    "RL" => 2,
-    "RM" => 3,
-    "RH" => 4,
-    "FV" => 5,
-    "A"  => 6,
-    "I"  => 7,
-    "C (all)" => 8
-  ),
-  :Street => Dict("Pave" => 2, "Grvl" => 1, "NA" => 0),
-  :Alley => Dict("Pave" => 2, "Grvl" => 1, "NA" => 0),
-  :LotShape => Dict(
-    "Reg" => 0,
-    "IR1" => 1,
-    "IR2" => 2,
-    "IR3" => 3
-  ),
-  :LandContour => Dict(
-    "Lvl" => 0,
-    "Bnk" => 1,
-    "Low" => 2,
-    "HLS" => 3
-  ),
-  :Utilities => Dict(
-    "AllPub" => 0,
-    "NoSewr" => 1,
-    "NoSeWa" => 2,
-    "ELO"    => 3
-  ),
-  :LotConfig => Dict(
-    "Inside"  => 0,
-    "Corner"  => 1,
-    "CulDSac" => 2,
-    "FR2"     => 3,
-    "FR3"     => 4
-  ),
-  :LandSlope => Dict(
-    "Gtl" => 0,
-    "Mod" => 1,
-    "Sev" => 2
-  ),
-  :Neighborhood => Dict(
-    "CollgCr" => 0,
-    "Veenker" => 1,
-    "Crawfor" => 2,
-    "NoRidge" => 3,
-    "Mitchel" => 4,
-    "Somerst" => 5,
-    "NWAmes"  => 6,
-    "OldTown" => 7,
-    "BrkSide" => 8,
-    "Sawyer"  => 9,
-    "NridgHt" => 10,
-    "NAmes"   => 11,
-    "SawyerW" => 12,
-    "IDOTRR"  => 13,
-    "MeadowV" => 14,
-    "Edwards" => 15,
-    "Timber"  => 16,
-    "Gilbert" => 17,
-    "StoneBr" => 18,
-    "ClearCr" => 19,
-    "NPkVill" => 20,
-    "Blmngtn" => 21,
-    "BrDale"  => 22,
-    "SWISU"   => 23,
-    "Blueste" => 24,
-  )
-)
-function foo(val::Array{Union{Missing, String}})
-  println("tryhing")
-end
-function foo(val::Array{Union{Missing, Number}})
-  println("number")
-end
-function do_map(oldval::String, mapping::Dict)
-  @assert in(oldval, keys(mapping))
-  mapping[oldval]
-end
+# Feature Cleaning
 
 function na_is_zero(old::String)
   @assert occursin(r"^NA|[0-9]+$", old)
   old == "NA" ? 0 : parse(Int64, old)
 end
 
-const global label = :price
+for x in [:LotFrontage, :MasVnrArea, :GarageYrBlt]
+  tmp = dataframe[x] .|> na_is_zero
+  deletecols!(dataframe, x)
+  insertcols!(dataframe, 2, x => tmp)
+end
 
+
+const global label = :SalePrice
+
+# if the spread of values is large break them into pieces sized by the std deviation
 function large_partition(feature_values)
   acc = []
   step = feature_values |> std
@@ -116,6 +44,7 @@ function large_partition(feature_values)
   acc
 end
 
+# if the spread is small just break by unique values (but include down to 0 and up to infinity)
 function small_partition(feature_values)
   feature_values = sort(feature_values)
   acc = []
@@ -133,12 +62,22 @@ function small_partition(feature_values)
   acc
 end
 
+# if the values are straings just partition by value
+function partition(feature_values::Array{Union{Missing, String}})
+  map(x -> (first = x, second = x), feature_values)
+end
+
+# what kind of (numeric) partition should we do
 function partition(feature_values)
   if (feature_values |> unique |> length) > 15
     large_partition(feature_values)
   else
     small_partition(feature_values)
   end
+end
+
+function inpartition(tup, val::Union{String, Char})
+  (tup.first == val)
 end
 
 function inpartition(tup, val)
@@ -223,20 +162,28 @@ function treewalk(item, branch::Array, value=0)
   sum(branch) / length(branch)
 end
 
-
-function treewalk(item, branch::Dict, value=0)
+function treewalk(item, branch::Dict)
   ks = (branch |> keys |> collect)
-  if (ks |> size |> first) < 1
-    (item, branch, value)
-  elseif (ks |> size |> first) == 1 && (ks |> first |> typeof) == Symbol
-    ky = ks |> first
-    new_branch = branch[ky]
-    treewalk(item, new_branch, (item[ky] |> first))
+  @assert (ks |> size |> first) == 1
+  @assert (ks |> first |> typeof) == Symbol
+
+  ky = ks |> first
+  new_branch = branch[ky]
+  value = item[ky]
+  treewalk(item, new_branch, value)
+end
+
+function treewalk(item, branch::Dict, value)
+  ks = (branch |> keys |> collect)
+  @assert (ks |> size |> first) > 0
+  matches = filter(x -> inpartition(x, value), ks)
+  if isempty(matches)
+    ky = sample(ks)
   else
-    ky = filter(x -> inpartition(x, value), ks) |> first
-    new_branch = branch[ky]
-    treewalk(item, new_branch)
+    ky = matches |> first
   end
+  new_branch = branch[ky]
+  treewalk(item, new_branch)
 end
 
 function many_trees(full_set, slices)
@@ -267,41 +214,50 @@ function many_trees(full_set, slices)
     @assert upper <= max
   end
   acc
-pend
-
-feature_frame = dataframe[dataframe[:bedrooms] .<= 10, :]
-
-test_set = copy(feature_frame[1:4323, :])
-train_set = copy(feature_frame[4324:21611, :])
-# sort!(train_set, label)
-for ing in [:id, :sqft_lot15, :sqft_living15, :date, :lat, :long]
-  deletecols!(train_set, ing)
 end
 
-trees = many_trees(train_set, 21);
+test_set = copy(dataframe[1:292, :])
+train_set = copy(dataframe[293:1460, :])
 
+# trees = many_trees(train_set, 21);
+tree = build_tree(train_set, 1000)
 global myerr = []
 for i in 1:size(test_set, 1)
   item = test_set[i, :]
-  predictions = []
-  for t in trees
-    p = treewalk(item, t.tree)
-    if p == t.min || p == t.max
-      #nop
-    else
-      push!(predictions, p)
-    end
-  end
-  predict = mean(predictions)
+  predict = treewalk(item, tree)
   err = abs(log(predict) - log(item[label]))
-  # if err > 100000
-  #   println(sort(predictions))
-  #   println(predict)
-  #   println(item[label])
-  # end
   push!(myerr, err)
 end
+println(sqrt(mean(myerr.^2.)))
+  # global myerr = []
+# for i in 1:size(test_set, 1)
+#   item = test_set[i, :]
+#   predictions = []
+#   for t in trees
+#     try
+#       p = treewalk(item, t)
+#     catch e
+#       println("caught an error: $e")
+#     end
+#     bar = ! @isdefined p
+#     if bar # || p == t.min || p == t.max
+#       #nop
+#     else
+#       push!(predictions, p)
+#     end
+#   end
+#   predict = mean(predictions)
+#   err = abs(log(predict) - log(item[label]))
+#   # if err > 100000
+#   #   println(sort(predictions))
+#   #   println(predict)
+#   #   println(item[label])
+#   # end
+#   push!(myerr, err)
+# end
 
+
+predict = treewalk()
 println(sqrt(mean(myerr.^2.)))
 
 #unsorted single tree
@@ -343,5 +299,3 @@ println(sqrt(mean(myerr.^2.)))
 # julia> println(sqrt(mean(myerr.^2.)))
 # 379433.6094573489
 
-
-  function 
