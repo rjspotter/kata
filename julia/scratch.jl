@@ -186,7 +186,7 @@ function treewalk(item, branch::Dict, value)
   treewalk(item, new_branch)
 end
 
-function many_trees(full_set, slices)
+function many_tree_slices(full_set, slices)
   @assert slices > 1
 
   acc = []
@@ -216,45 +216,56 @@ function many_trees(full_set, slices)
   acc
 end
 
+function random_tree_selection(full_set, probability, number)
+  acc = []
+  for n in number
+    tmp = filter(row -> (random(1:100) < probability), full_set)
+    push!(build_tree(tmp, 1000), acc)
+  end
+  acc
+end
+
 test_set = copy(dataframe[1:292, :])
 train_set = copy(dataframe[293:1460, :])
 
-# trees = many_trees(train_set, 21);
-tree = build_tree(train_set, 1000)
+# tree = build_tree(train_set, 1000)
+# global myerr = []
+# for i in 1:size(test_set, 1)
+#   item = test_set[i, :]
+#   predict = treewalk(item, tree)
+#   err = abs(log(predict) - log(item[label]))
+#   push!(myerr, err)
+# end
+# println(sqrt(mean(myerr.^2.)))
+
+trees = random_tree_selection(train_set, 21);
+
 global myerr = []
 for i in 1:size(test_set, 1)
   item = test_set[i, :]
-  predict = treewalk(item, tree)
+  predictions = []
+  for t in trees
+    try
+      p = treewalk(item, t)
+    catch e
+      println("caught an error: $e")
+    end
+    bar = ! @isdefined p
+    if bar # || p == t.min || p == t.max
+      #nop
+    else
+      push!(predictions, p)
+    end
+  end
+  predict = mean(predictions)
   err = abs(log(predict) - log(item[label]))
+  # if err > 100000
+  #   println(sort(predictions))
+  #   println(predict)
+  #   println(item[label])
+  # end
   push!(myerr, err)
 end
-println(sqrt(mean(myerr.^2.)))
-  # global myerr = []
-# for i in 1:size(test_set, 1)
-#   item = test_set[i, :]
-#   predictions = []
-#   for t in trees
-#     try
-#       p = treewalk(item, t)
-#     catch e
-#       println("caught an error: $e")
-#     end
-#     bar = ! @isdefined p
-#     if bar # || p == t.min || p == t.max
-#       #nop
-#     else
-#       push!(predictions, p)
-#     end
-#   end
-#   predict = mean(predictions)
-#   err = abs(log(predict) - log(item[label]))
-#   # if err > 100000
-#   #   println(sort(predictions))
-#   #   println(predict)
-#   #   println(item[label])
-#   # end
-#   push!(myerr, err)
-# end
 
 
 predict = treewalk()
