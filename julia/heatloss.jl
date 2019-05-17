@@ -60,3 +60,12 @@ radiant_loss += wall_assembly(95, 96, [[28, 38]])
 
 # Master Bedroom
 radiant_loss += wall_assembly(144, 96, [[75, 80]])
+
+# Closet
+radiant_loss += wall_assembly(60, 96)
+radiant_loss += wall_assembly(51, 123)
+radiant_loss += wall_assembly(83, 123, [[24, 28]])
+
+# My Office
+radiant_loss += wall_assembly(120, 96)
+radiant_loss += wall_assembly(108, 96)
