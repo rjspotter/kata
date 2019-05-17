@@ -218,9 +218,9 @@ end
 
 function random_tree_selection(full_set, probability, number)
   acc = []
-  for n in number
-    tmp = filter(row -> (random(1:100) < probability), full_set)
-    push!(build_tree(tmp, 1000), acc)
+  for n in 1:number
+    tmp = filter(row -> (rand(1:100) < probability), full_set)
+    push!(acc, build_tree(tmp, 1000))
   end
   acc
 end
@@ -228,85 +228,42 @@ end
 test_set = copy(dataframe[1:292, :])
 train_set = copy(dataframe[293:1460, :])
 
-# tree = build_tree(train_set, 1000)
-# global myerr = []
-# for i in 1:size(test_set, 1)
-#   item = test_set[i, :]
-#   predict = treewalk(item, tree)
-#   err = abs(log(predict) - log(item[label]))
-#   push!(myerr, err)
-# end
-# println(sqrt(mean(myerr.^2.)))
+trees = random_tree_selection(train_set, 50, 10);
 
-trees = random_tree_selection(train_set, 21);
-
-global myerr = []
-for i in 1:size(test_set, 1)
-  item = test_set[i, :]
-  predictions = []
-  for t in trees
-    try
-      p = treewalk(item, t)
-    catch e
-      println("caught an error: $e")
+function test_trees(trees)
+  myerr = []
+  missed_cnt = 0
+  for i in 1:size(test_set, 1)
+    item = test_set[i, :]
+    predictions = []
+    for t in trees
+      try
+        p = treewalk(item, t)
+        push!(predictions, p)
+      catch e
+        println("caught an error: $e")
+      end
+      # bar = ! @isdefined p
+      # if bar # || p == t.min || p == t.max
+      #   println("#nop")
+      # else
+      #   push!(predictions, p)
+      # end
     end
-    bar = ! @isdefined p
-    if bar # || p == t.min || p == t.max
-      #nop
-    else
-      push!(predictions, p)
-    end
+    @assert ! isempty(predictions)
+    predict = mean(predictions)
+    err = abs(log(predict) - log(item[label]))
+    push!(myerr, err)
+    # if err > 100000
+    #   println(sort(predictions))
+    #   println(predict)
+    #   println(item[label])
+    # end
   end
-  predict = mean(predictions)
-  err = abs(log(predict) - log(item[label]))
-  # if err > 100000
-  #   println(sort(predictions))
-  #   println(predict)
-  #   println(item[label])
-  # end
-  push!(myerr, err)
+  println(missed_cnt)
+  println(sqrt(mean(myerr.^2.)))
 end
 
+test_trees(trees)
 
-predict = treewalk()
-println(sqrt(mean(myerr.^2.)))
-
-#unsorted single tree
-# julia> println(mean(myerr))
-# 184383.37709441825
-
-# julia> println(sqrt(mean(myerr.^2.)))
-# 334189.8279692254
-
-
-# unsorted & sliced
-# julia> println(mean(myerr))
-# 151868.14472280702
-
-# julia> println(sqrt(mean(myerr.^2.)))
-# 280462.39544090594
-
-
-# sorted & sliced
-# julia> println(mean(myerr))
-# 235164.47230174634
-
-# julia> println(sqrt(mean(myerr.^2.)))
-# 385158.98424631305
-
-
-# unsorted & overlapping slices
-# julia> println(mean(myerr))
-# 147712.1182026513
-
-# julia> println(sqrt(mean(myerr.^2.)))
-# 264368.5619372746
-
-
-# sorted & overlapping slices
-# julia> println(mean(myerr))
-# 236879.06318660572
-
-# julia> println(sqrt(mean(myerr.^2.)))
-# 379433.6094573489
-
+# 0.26138826805475596
