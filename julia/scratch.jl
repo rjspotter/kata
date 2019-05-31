@@ -255,6 +255,49 @@ for i in 1:5
   generation[test_trees(trees)] = args
 end
 
+for i in 1:5
+  scores = generation |> keys |> collect |> sort
+  a = generation[scores[1]]
+  b = generation[scores[2]]
+
+  args = (a[1], a[2], a[3], b[4])
+  trees = generate_forrest(train_set, args);
+  generation[test_trees(trees)] = args
+
+  args = (a[1], a[2], b[3], a[4])
+  trees = generate_forrest(train_set, args);
+  generation[test_trees(trees)] = args
+
+  args = (a[1], b[2], a[3], a[4])
+  trees = generate_forrest(train_set, args);
+  generation[test_trees(trees)] = args
+
+  args = (b[1], a[2], a[3], a[4])
+  trees = generate_forrest(train_set, args);
+  generation[test_trees(trees)] = args
+
+  args = (a[1], a[2], b[3], b[4])
+  trees = generate_forrest(train_set, args);
+  generation[test_trees(trees)] = args
+
+  args = (a[1], b[2], a[3], b[4])
+  trees = generate_forrest(train_set, args);
+  generation[test_trees(trees)] = args
+
+  args = (b[1], a[2], a[3], b[4])
+  trees = generate_forrest(train_set, args);
+  generation[test_trees(trees)] = args
+
+  args = (a[1], b[2], b[3], b[4])
+  trees = generate_forrest(train_set, args);
+  generation[test_trees(trees)] = args
+
+  args = (b[1], a[2], b[3], b[4])
+  trees = generate_forrest(train_set, args);
+  generation[test_trees(trees)] = args
+
+end
+
 # Dict{Any,Any} with 5 entries:
 #   0.329141 => (75, 3, 9762, 17)
 #   0.299757 => (12, 5, 9771, 25)
