@@ -244,7 +244,7 @@ function test_trees(trees)
 end
 
 generation = Dict()
-for i in 1:5
+for i in 1:4
   println(i)
   probability = rand(1:100)
   number = rand(1:25)
@@ -255,53 +255,252 @@ for i in 1:5
   generation[test_trees(trees)] = args
 end
 
-for i in 1:5
-  scores = generation |> keys |> collect |> sort
-  a = generation[scores[1]]
-  b = generation[scores[2]]
+println("one")
+args = (20, 20, 1000, 10)
+trees = generate_forrest(train_set, args);
+generation[test_trees(trees)] = args
 
+println("two")
+args = (40, 10, 5000, 25)
+trees = generate_forrest(train_set, args);
+generation[test_trees(trees)] = args
+
+println("three")
+args = (60, 15, 10000, 20)
+trees = generate_forrest(train_set, args);
+generation[test_trees(trees)] = args
+
+println("four")
+args = (80, 5, 15000, 15)
+trees = generate_forrest(train_set, args);
+generation[test_trees(trees)] = args
+
+println("hand")
+args = (80, 20, 100, 12)
+trees = generate_forrest(train_set, args);
+generation[test_trees(trees)] = args
+
+
+for i in 1:5
+  println("############################## $i")
+  scores = generation |> keys |> collect |> sort
+  arglist = generation |> values |> collect
+  best = scores[1]
+  next_best = ()
+  for j in 2:length(scores)
+    if scores[j] == best || next_best != ()
+      #n0p
+    else
+      next_best = scores[j]
+    end
+  end
+  a = generation[best]
+  b = generation[next_best]
+  println(a)
+  println(b)
+
+  println("# children")
   args = (a[1], a[2], a[3], b[4])
-  trees = generate_forrest(train_set, args);
-  generation[test_trees(trees)] = args
+  if (findall(x -> x == args, arglist) |> length) == 0
+    println(args)
+    trees = generate_forrest(train_set, args);
+    generation[test_trees(trees)] = args
+  end
 
   args = (a[1], a[2], b[3], a[4])
-  trees = generate_forrest(train_set, args);
-  generation[test_trees(trees)] = args
+  if (findall(x -> x == args, arglist) |> length) == 0
+    println(args)
+    trees = generate_forrest(train_set, args);
+    generation[test_trees(trees)] = args
+  end
 
   args = (a[1], b[2], a[3], a[4])
-  trees = generate_forrest(train_set, args);
-  generation[test_trees(trees)] = args
+  if (findall(x -> x == args, arglist) |> length) == 0
+    println(args)
+    trees = generate_forrest(train_set, args);
+    generation[test_trees(trees)] = args
+  end
 
   args = (b[1], a[2], a[3], a[4])
-  trees = generate_forrest(train_set, args);
-  generation[test_trees(trees)] = args
+  if (findall(x -> x == args, arglist) |> length) == 0
+    println(args)
+    trees = generate_forrest(train_set, args);
+    generation[test_trees(trees)] = args
+  end
 
   args = (a[1], a[2], b[3], b[4])
-  trees = generate_forrest(train_set, args);
-  generation[test_trees(trees)] = args
+  if (findall(x -> x == args, arglist) |> length) == 0
+    println(args)
+    trees = generate_forrest(train_set, args);
+    generation[test_trees(trees)] = args
+  end
 
   args = (a[1], b[2], a[3], b[4])
-  trees = generate_forrest(train_set, args);
-  generation[test_trees(trees)] = args
+  if (findall(x -> x == args, arglist) |> length) == 0
+    println(args)
+    trees = generate_forrest(train_set, args);
+    generation[test_trees(trees)] = args
+  end
 
   args = (b[1], a[2], a[3], b[4])
-  trees = generate_forrest(train_set, args);
-  generation[test_trees(trees)] = args
+  if (findall(x -> x == args, arglist) |> length) == 0
+    println(args)
+    trees = generate_forrest(train_set, args);
+    generation[test_trees(trees)] = args
+  end
 
   args = (a[1], b[2], b[3], b[4])
-  trees = generate_forrest(train_set, args);
-  generation[test_trees(trees)] = args
+  if (findall(x -> x == args, arglist) |> length) == 0
+    println(args)
+    trees = generate_forrest(train_set, args);
+    generation[test_trees(trees)] = args
+  end
 
   args = (b[1], a[2], b[3], b[4])
-  trees = generate_forrest(train_set, args);
-  generation[test_trees(trees)] = args
+  if (findall(x -> x == args, arglist) |> length) == 0
+    println(args)
+    trees = generate_forrest(train_set, args);
+    generation[test_trees(trees)] = args
+  end
+
+  println("# like birds")
+  random_key = generation |> keys |> collect |> rand
+  c = generation[random_key]
+
+  args = (a[1], c[2], a[3], a[4])
+  if (findall(x -> x == args, arglist) |> length) == 0
+    println(args)
+    trees = generate_forrest(train_set, args);
+    generation[test_trees(trees)] = args
+  end
+
+  args = (c[1], a[2], a[3], a[4])
+  if (findall(x -> x == args, arglist) |> length) == 0
+    println(args)
+    trees = generate_forrest(train_set, args);
+    generation[test_trees(trees)] = args
+  end
+
+  args = (a[1], a[2], c[3], c[4])
+  if (findall(x -> x == args, arglist) |> length) == 0
+    println(args)
+    trees = generate_forrest(train_set, args);
+    generation[test_trees(trees)] = args
+  end
+
+  args = (a[1], c[2], a[3], c[4])
+  if (findall(x -> x == args, arglist) |> length) == 0
+    println(args)
+    trees = generate_forrest(train_set, args);
+    generation[test_trees(trees)] = args
+  end
+
+  args = (c[1], a[2], a[3], c[4])
+  if (findall(x -> x == args, arglist) |> length) == 0
+    println(args)
+    trees = generate_forrest(train_set, args);
+    generation[test_trees(trees)] = args
+  end
+
+  args = (a[1], c[2], c[3], c[4])
+  if (findall(x -> x == args, arglist) |> length) == 0
+    println(args)
+    trees = generate_forrest(train_set, args);
+    generation[test_trees(trees)] = args
+  end
+
+  args = (c[1], a[2], c[3], c[4])
+  if (findall(x -> x == args, arglist) |> length) == 0
+    println(args)
+    trees = generate_forrest(train_set, args);
+    generation[test_trees(trees)] = args
+  end
+
+  println("# mutants")
+  # mutants
+  r1 = rand(min(a[1], b[1]):max(a[1], b[1]))
+  r2 = rand(min(a[2], b[2]):max(a[2], b[2]))
+  r3 = rand(min(a[3], b[3]):max(a[3], b[3]))
+  r4 = rand(min(a[4], b[4]):max(a[4], b[4]))
+
+  args = (r1, r2, r3, r4)
+  if (findall(x -> x == args, arglist) |> length) == 0
+    println(args)
+    trees = generate_forrest(train_set, args);
+    generation[test_trees(trees)] = args
+  end
+
+  r1 = rand(min(a[1], c[1]):max(a[1], c[1]))
+  r2 = rand(min(a[2], c[2]):max(a[2], c[2]))
+  r3 = rand(min(a[3], c[3]):max(a[3], c[3]))
+  r4 = rand(min(a[4], c[4]):max(a[4], c[4]))
+
+  args = (r1, r2, r3, r4)
+  if (findall(x -> x == args, arglist) |> length) == 0
+    println(args)
+    trees = generate_forrest(train_set, args);
+    generation[test_trees(trees)] = args
+  end
+
+  args = (rand(1:100), rand(1:35), rand(1:20000), rand(1:50))
+  if (findall(x -> x == args, arglist) |> length) == 0
+    println(args)
+    trees = generate_forrest(train_set, args);
+    generation[test_trees(trees)] = args
+  end
 
 end
 
-# Dict{Any,Any} with 5 entries:
-#   0.329141 => (75, 3, 9762, 17)
-#   0.299757 => (12, 5, 9771, 25)
-#   0.26881  => (72, 18, 4933, 29)
-#   0.269774 => (65, 5, 7249, 11)
-#   0.255723 => (27, 25, 8344, 13)
+# julia> generation |> keys |> collect |> first
+# 0.23608925359963231
 
+# Dict{Any,Any} with 49 entries:
+#   0.236089 => (60, 20, 1000, 10)
+#   0.237216 => (60, 20, 1000, 10)
+#   0.263558 => (20, 15, 10000, 20)
+#   0.251939 => (20, 20, 1000, 10)
+#   0.24149  => (60, 20, 10000, 20)
+#   0.233081 => (60, 20, 1000, 10)
+#   0.24234  => (60, 20, 1000, 10)
+#   0.247838 => (60, 20, 10000, 20)
+#   0.232556 => (60, 20, 1000, 10)
+#   0.247728 => (20, 20, 10000, 10)
+#   0.241869 => (60, 20, 1000, 10)
+#   0.237941 => (60, 20, 1000, 10)
+#   0.2306   => (60, 20, 1000, 10)
+#   0.260649 => (20, 20, 10000, 20)
+#   0.242452 => (60, 20, 1000, 10)
+#   0.231452 => (60, 20, 1000, 10)
+#   0.26388  => (20, 20, 1000, 20)
+#   0.263647 => (60, 20, 10000, 20)
+#   0.233094 => (60, 20, 1000, 10)
+#   0.234377 => (60, 20, 1000, 10)
+#   0.241057 => (60, 20, 1000, 10)
+#   0.26135  => (60, 20, 1000, 20)
+#   0.239833 => (60, 20, 1000, 10)
+#   0.261211 => (20, 15, 1000, 10)
+#   0.232702 => (60, 20, 1000, 10)
+#   0.238427 => (60, 20, 10000, 10)
+#   0.230618 => (60, 20, 1000, 10)
+#   0.267439 => (60, 15, 10000, 20)
+#   0.23678  => (60, 20, 1000, 10)
+#   0.272223 => (20, 15, 1000, 20)
+#   0.237649 => (60, 20, 1000, 10)
+#   0.252244 => (60, 20, 1000, 20)
+#   0.244298 => (60, 20, 1000, 10)
+#   0.235722 => (60, 20, 1000, 10)
+#   0.239966 => (60, 20, 1000, 10)
+#   0.23982  => (60, 20, 1000, 10)
+#   0.268758 => (40, 10, 5000, 25)
+#   0.249321 => (60, 20, 1000, 10)
+#   0.243414 => (60, 20, 1000, 10)
+#   0.226389 => (60, 20, 1000, 10)
+#   0.240864 => (60, 20, 1000, 10)
+#   0.278965 => (80, 5, 15000, 15)
+#   0.262483 => (60, 20, 1000, 20)
+#   0.260504 => (60, 20, 1000, 20)
+#   0.233137 => (60, 20, 1000, 10)
+#   0.257974 => (60, 20, 10000, 20)
+#   0.233645 => (60, 20, 1000, 10)
+#   0.243065 => (60, 20, 1000, 10)
+#   0.233555 => (60, 20, 1000, 10)
