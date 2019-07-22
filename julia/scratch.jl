@@ -4,6 +4,7 @@ using Pkg
 using Query
 using StatsBase
 using Statistics
+using Tables
 
 # const global dataframe = open("/home/ubuntu/data/kc_house_data/kc_house_data.csv") |> CSV.File |> DataFrame
 const global dataframe = open("/home/ubuntu/data/house-prices-advanced-regression-techniques/train.csv") |> CSV.File |> DataFrame
@@ -208,40 +209,74 @@ train_set = copy(dataframe[293:1460, :])
 
 # trees = generate_forrest(train_set, 50, 10, 1000, 15);
 
-function test_trees(trees)
-  myerr = []
-  missed_cnt = 0
-  for i in 1:size(test_set, 1)
-    item = test_set[i, :]
-    predictions = []
-    for t in trees
-      try
-        p = treewalk(item, t)
-        push!(predictions, p)
-      catch e
-        println("caught an error: $e")
+function gen_tester(decoder)
+  function test_trees(trees)
+    myerr = []
+    missed_cnt = 0
+    for i in 1:size(test_set, 1)
+      item = test_set[i, :]
+      predictions = []
+      for t in trees
+        try
+          p = treewalk(item, t)
+          push!(predictions, decoder(item, p))
+        catch e
+          println("caught an error: $e")
+        end
+        # bar = ! @isdefined p
+        # if bar # || p == t.min || p == t.max
+        #   println("#nop")
+        # else
+        #   push!(predictions, p)
+        # end
       end
-      # bar = ! @isdefined p
-      # if bar # || p == t.min || p == t.max
-      #   println("#nop")
-      # else
-      #   push!(predictions, p)
+      @assert ! isempty(predictions)
+      predict = mean(predictions)
+      err = abs(log(predict) - log(item[label]))
+      push!(myerr, err)
+      # if err > 100000
+      #   println(sort(predictions))
+      #   println(predict)
+      #   println(item[label])
       # end
     end
-    @assert ! isempty(predictions)
-    predict = mean(predictions)
-    err = abs(log(predict) - log(item[label]))
-    push!(myerr, err)
-    # if err > 100000
-    #   println(sort(predictions))
-    #   println(predict)
-    #   println(item[label])
-    # end
+    println(missed_cnt)
+    # println(sqrt(mean(myerr.^2.)))
+    sqrt(mean(myerr.^2.))
   end
-  println(missed_cnt)
-  # println(sqrt(mean(myerr.^2.)))
-  sqrt(mean(myerr.^2.))
 end
+
+# feature engineering
+function gen_date_encoder(dataset)
+  all_mean = mean(dataset[label])
+  lookup = by(dataset, [:YrSold, :MoSold], mean = label => mean)
+
+  function this_mean(feature_value)
+    lookup[(lookup.YrSold .== feature_value[:YrSold]) .& (lookup.MoSold .== feature_value[:MoSold]), :mean] |> first
+  end
+
+  function date_encoder(feature_value)
+    (feature_value[label] / all_mean) * this_mean(feature_value)
+  end
+
+  function date_decoder(feature_value, prediction)
+    (prediction / this_mean(feature_value)) * all_mean
+  end
+
+  [date_encoder, date_decoder]
+end
+
+date_encoder, date_decoder = gen_date_encoder(train_set)
+
+tmp = []
+for i in (1:size(train_set, 1))
+  push!(tmp, date_encoder(train_set[i, :]))
+end
+
+deletecols!(train_set, label)
+insertcols!(train_set, 2, label => tmp)
+
+test_trees = gen_tester(date_decoder)
 
 generation = Dict()
 for i in 1:4
@@ -451,56 +486,62 @@ for i in 1:5
 
 end
 
-# julia> generation |> keys |> collect |> first
-# 0.23608925359963231
+# julia> generation |> keys |> collect |> sort |> first
+# 0.2447208046533659
 
-# Dict{Any,Any} with 49 entries:
-#   0.236089 => (60, 20, 1000, 10)
-#   0.237216 => (60, 20, 1000, 10)
-#   0.263558 => (20, 15, 10000, 20)
-#   0.251939 => (20, 20, 1000, 10)
-#   0.24149  => (60, 20, 10000, 20)
-#   0.233081 => (60, 20, 1000, 10)
-#   0.24234  => (60, 20, 1000, 10)
-#   0.247838 => (60, 20, 10000, 20)
-#   0.232556 => (60, 20, 1000, 10)
-#   0.247728 => (20, 20, 10000, 10)
-#   0.241869 => (60, 20, 1000, 10)
-#   0.237941 => (60, 20, 1000, 10)
-#   0.2306   => (60, 20, 1000, 10)
-#   0.260649 => (20, 20, 10000, 20)
-#   0.242452 => (60, 20, 1000, 10)
-#   0.231452 => (60, 20, 1000, 10)
-#   0.26388  => (20, 20, 1000, 20)
-#   0.263647 => (60, 20, 10000, 20)
-#   0.233094 => (60, 20, 1000, 10)
-#   0.234377 => (60, 20, 1000, 10)
-#   0.241057 => (60, 20, 1000, 10)
-#   0.26135  => (60, 20, 1000, 20)
-#   0.239833 => (60, 20, 1000, 10)
-#   0.261211 => (20, 15, 1000, 10)
-#   0.232702 => (60, 20, 1000, 10)
-#   0.238427 => (60, 20, 10000, 10)
-#   0.230618 => (60, 20, 1000, 10)
-#   0.267439 => (60, 15, 10000, 20)
-#   0.23678  => (60, 20, 1000, 10)
-#   0.272223 => (20, 15, 1000, 20)
-#   0.237649 => (60, 20, 1000, 10)
-#   0.252244 => (60, 20, 1000, 20)
-#   0.244298 => (60, 20, 1000, 10)
-#   0.235722 => (60, 20, 1000, 10)
-#   0.239966 => (60, 20, 1000, 10)
-#   0.23982  => (60, 20, 1000, 10)
-#   0.268758 => (40, 10, 5000, 25)
-#   0.249321 => (60, 20, 1000, 10)
-#   0.243414 => (60, 20, 1000, 10)
-#   0.226389 => (60, 20, 1000, 10)
-#   0.240864 => (60, 20, 1000, 10)
-#   0.278965 => (80, 5, 15000, 15)
-#   0.262483 => (60, 20, 1000, 20)
-#   0.260504 => (60, 20, 1000, 20)
-#   0.233137 => (60, 20, 1000, 10)
-#   0.257974 => (60, 20, 10000, 20)
-#   0.233645 => (60, 20, 1000, 10)
-#   0.243065 => (60, 20, 1000, 10)
-#   0.233555 => (60, 20, 1000, 10)
+# julia> generation
+# Dict{Any,Any} with 54 entries:
+#   0.261363 => (76, 7, 1197, 6)
+#   0.281518 => (40, 10, 5000, 25)
+#   0.253996 => (40, 12, 5067, 6)
+#   0.25875  => (40, 12, 5067, 7)
+#   0.252379 => (40, 12, 4940, 6)
+#   0.26178  => (44, 8, 2581, 7)
+#   0.258522 => (40, 9, 5000, 6)
+#   0.273226 => (76, 7, 5067, 6)
+#   0.345439 => (11, 3, 18200, 23)
+#   0.287219 => (60, 12, 10000, 20)
+#   0.268524 => (40, 7, 4992, 6)
+#   0.244721 => (40, 12, 4992, 6)
+#   0.266494 => (40, 12, 1197, 6)
+#   0.283175 => (60, 15, 10000, 20)
+#   0.261614 => (76, 12, 5067, 6)
+#   0.263163 => (40, 12, 4982, 6)
+#   0.246846 => (40, 12, 4994, 6)
+#   0.254292 => (60, 12, 5067, 6)
+#   0.258944 => (64, 11, 1994, 6)
+#   0.273945 => (40, 15, 10000, 20)
+#   0.264005 => (40, 12, 1197, 7)
+#   0.264002 => (40, 12, 4940, 7)
+#   0.256894 => (47, 14, 7731, 1)
+#   0.26486  => (76, 12, 5067, 7)
+#   0.264587 => (20, 20, 1000, 10)
+#   0.286819 => (47, 14, 8316, 16)
+#   0.285862 => (46, 17, 16432, 26)
+#   0.290088 => (60, 12, 5067, 20)
+#   0.256702 => (40, 12, 5067, 7)
+#   0.362721 => (99, 3, 8730, 30)
+#   0.285059 => (80, 20, 100, 12)
+#   0.267928 => (72, 12, 4942, 6)
+#   0.264311 => (64, 12, 11095, 5)
+#   0.274243 => (40, 15, 5067, 20)
+#   0.280937 => (76, 7, 1197, 7)
+#   0.258023 => (76, 12, 1197, 7)
+#   0.258939 => (76, 12, 4940, 7)
+#   0.262463 => (76, 12, 5067, 6)
+#   0.275111 => (76, 7, 1197, 7)
+#   0.275391 => (40, 12, 10000, 20)
+#   0.263803 => (40, 12, 1197, 6)
+#   0.363344 => (90, 2, 3082, 13)
+#   0.274417 => (76, 7, 1197, 6)
+#   0.256015 => (40, 12, 5067, 6)
+#   0.262807 => (76, 12, 4940, 6)
+#   0.263517 => (76, 12, 1197, 6)
+#   0.265764 => (40, 7, 4992, 6)
+#   0.266776 => (40, 12, 5067, 7)
+#   0.25754  => (40, 15, 5067, 6)
+#   0.262863 => (40, 7, 5067, 6)
+#   0.297813 => (80, 5, 15000, 15)
+#   0.269625 => (76, 7, 5067, 6)
+#   0.254191 => (40, 12, 1197, 7)
+#   0.305289 => (95, 23, 4404, 23)
