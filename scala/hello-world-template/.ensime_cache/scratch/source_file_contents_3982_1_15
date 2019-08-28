@@ -1,0 +1,27 @@
+import math._
+object Main extends App {
+  println("Hello, World!")
+
+  def something(x: Int, n:Int): Double = {
+    if(abs(n) == n && n % 2 == 0) {
+      println("pos even")
+      val tm
+      something(x,(n / 2)) * something(x, (n / 2))
+    }
+    else if(abs(n) == n && n % 2 != 0) {
+      println("pos odd")
+      x * something(x, n - 1)
+    }
+    else if(n == 0) {
+      println("zero")
+      1
+    }
+    else if(abs(n) != n) {
+      println("negative")
+      1 / something(x, abs(n))
+    }
+    else
+      throw new Error
+  }
+}
+

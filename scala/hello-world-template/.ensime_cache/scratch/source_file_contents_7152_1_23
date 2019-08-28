@@ -1,0 +1,29 @@
+import math._
+import util.Random
+object Main extends App {
+  println("Hello, World!")
+
+  def something(n: Int) = {
+    val x = new Array[Int](n)
+    for(i <- 0 until x.length) {
+      x(i) = Random.nextInt(n)
+    }
+    x
+  }
+
+  def otherthing(a: Array[Int]): Array[Int] = {
+    for(i <- a) yield {
+      val j = a.indexOf(i)
+      if(j == a.length - 1){
+        i
+      } else if(j % 2 == 0) {
+        a(j + 1)
+      } else {
+        a(j - 1)
+      }
+    }
+  }
+
+  de
+}
+
