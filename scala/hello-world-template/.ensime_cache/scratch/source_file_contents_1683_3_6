@@ -1,0 +1,30 @@
+import math._
+import util.Random
+import util.Sorting._
+
+object Main extends App {
+  println( args.reverse.mkString(" ") )
+}
+
+
+object Solution {
+  /**
+    * https://leetcode.com/problems/remove-vowels-from-a-string/
+    *
+    * >>> Solution.removeVowels("leetcodeisacommunityforcoders")
+    * "ltcdscmmntyfrcdrs"
+    *
+    * >>> Solution.removeVowels("aeiou")
+    * ""
+    *
+    * scala> Solution.removeVowels("leetcodeisacommunityforcoders")
+    * res0: String = "ltcdscmmntyfrcdrs"
+    *
+    * scala> Solution.removeVowels("aeiou")
+    * res0: String = ""
+    *
+    */
+  def removeVowels(S: String): String = {
+    as
+  }
+}

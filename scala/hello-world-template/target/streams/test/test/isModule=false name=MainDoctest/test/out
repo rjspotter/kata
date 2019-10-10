@@ -1,0 +1,10 @@
+[0m[[0m[0minfo[0m] [0m[0m[32mMainDoctest:[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mMain.scala:11: removeVowels[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[31m- example at line 14: Solution.removeVowels("leetcodeisacommunityforcoders") *** FAILED ***[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[31m  "[leetcodeisacommunityforcoders]" did not equal "["ltcdscmmntyfrcdrs"]" (MainDoctest.scala:21)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[31m- example at line 17: Solution.removeVowels("aeiou") *** FAILED ***[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[31m  "[aeiou]" did not equal "[""]" (MainDoctest.scala:26)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[31m- example at line 20: Solution.removeVowels("leetcodeisacommunityforcoders") *** FAILED ***[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[31m  "[leetcodeisacommunityforcoders]" did not equal "["ltcdscmmntyfrcdrs"]" (MainDoctest.scala:31)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[31m- example at line 23: Solution.removeVowels("aeiou") *** FAILED ***[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[31m  "[aeiou]" did not equal "[""]" (MainDoctest.scala:36)[0m[0m

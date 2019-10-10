@@ -4,109 +4,39 @@ import util.Sorting._
 
 object Main extends App {
   println( args.reverse.mkString(" ") )
+}
 
-  def something(n: Int) = {
-    val x = new Array[Int](n)
-    for(i <- 0 until x.length) {
-      x(i) = Random.nextInt(n)
-    }
-    x
-  }
 
-  def otherthing(a: Array[Int]): Array[Int] = {
-    for(i <- a) yield {
-      val j = a.indexOf(i)
-      if(j == a.length - 1){
-        i
-      } else if(j % 2 == 0) {
-        a(j + 1)
-      } else {
-        a(j - 1)
+object Solution {
+  /**
+    * https://leetcode.com/problems/remove-vowels-from-a-string/
+    *
+    * >>> Solution.removeVowels("leetcodeisacommunityforcoders")
+    * "ltcdscmmntyfrcdrs"
+    *
+    * >>> Solution.removeVowels("aeiou")
+    * ""
+    *
+    * scala> Solution.removeVowels("leetcodeisacommunityforcoders")
+    * res0: String = "ltcdscmmntyfrcdrs"
+    *
+    * scala> Solution.removeVowels("aeiou")
+    * res0: String = ""
+    *
+    */
+  def removeVowels(S: String): String = {
+    assert(S.length <= 1000)
+    assert(S.length >= 1)
+    val vowels: Array[String] = Array("a", "e", "i", "o", "u")
+    var acc = ""
+    for(s <- S) {
+      println(vowels)
+      print(s)
+      println(vowels.indexOf(s))
+      if(vowels.indexOf(s) < 0) {
+        acc += s
       }
     }
-  }
-
-  def newthing(a: Array[Int]): Array[Int] = {
-    val p = a.groupBy(_ >= 0)
-    p(true) ++ p(false)
-  }
-}
-
-class Counter {
-  private var value: BigInt = Int.MaxValue;
-
-  def increment() = { value += 1}
-  def current() = value
-}
-
-
-class BankAccount(private var balance: BigDecimal) {
-
-  def deposit(amount: BigDecimal) { balance += amount}
-  def withdraw(amount: BigDecimal) { balance -= amount}
-
-  def current = balance
-}
-
-class Time(private val epoch: Int) {
-
-  def this(hours: Int, minutes: Int) {
-    this(hours * 60 + minutes)
-  }
-
-  def before(other: Time) = {
-    epoch < other.epoch
-  }
-}
-
-
-class Person {
-  var age: Int
-
-  def this(age: Int) = {
-    this()
-    if(age > 0) {
-      this.age = age
-    } else {
-      this.age = 0
-    }
-  }
-}
-
-
-class UnitConversion {}
-
-object InchesToCentimeters extends UnitConversion {
-  def apply(inches: Double): Double = {
-    inches * 2.54
-  }
-}
-
-object GallonsToLiters extends UnitConversion {
-  def apply(gallons: Double): Double = {
-    gallons * 3.78541
-  }
-}
-
-object MilesToKilometers extends UnitConversion {
-  def apply(miles: Double): Double = {
-    miles * 3.78541
-  }
-}
-
-object Suits extends Enumeration {
-  type Suits = Value
-  val heart = Value("♥")
-  val diamond = Value("♦")
-  val spade = Value("♠")
-  val club = Value("♣")
-
-  override def toString() = {
-    Suits.values.head.toString()
-  }
-
-  def isRed(str: String): Boolean = {
-    val suit = Suits.withName(str)
-    (suit == heart || suit == diamond)
+    acc
   }
 }

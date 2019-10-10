@@ -4,7 +4,7 @@
 		module="hello-world-template-build"
 		revision="0.1.0-SNAPSHOT"
 		status="integration"
-		publication="20190605202715"
+		publication="20190829232637"
 		e:sbtVersion="1.0" e:scalaVersion="2.12"
 	>
 		<description>
@@ -40,6 +40,7 @@
 			<artifact name="global-plugins" type="src" ext="jar" conf="compile" e:classifier="sources"/>
 			<artifact name="global-plugins" type="doc" ext="jar" conf="compile" e:classifier="javadoc"/>
 		</dependency>
+		<dependency org="com.github.tkawachi" name="sbt-doctest" rev="0.9.5" conf="compile->default(compile)" e:sbtVersion="1.0" e:scalaVersion="2.12"/>
 		<override org="org.scala-sbt" module="scripted-plugin_2.12" matcher="exact" rev="1.2.8"/>
 	</dependencies>
 </ivy-module>

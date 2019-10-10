@@ -4,7 +4,7 @@
 		module="hello-world_2.12"
 		revision="1.0"
 		status="integration"
-		publication="20190605202721"
+		publication="20190829232642"
 	>
 		<description>
 		hello-world
@@ -33,5 +33,7 @@
 		<dependency org="org.scala-lang" name="scala-compiler" rev="2.12.8" conf="scala-tool->default,optional(default)"/>
 		<dependency org="org.scala-lang" name="scala-library" rev="2.12.8" conf="scala-tool->default,optional(default);compile->default(compile)"/>
 		<dependency org="org.typelevel" name="cats-core_2.12" rev="1.6.0" conf="compile->default(compile)"/>
+		<dependency org="org.scalatest" name="scalatest_2.12" rev="3.0.5" conf="test->default(compile)"/>
+		<dependency org="org.scalacheck" name="scalacheck_2.12" rev="1.14.0" conf="test->default(compile)"/>
 	</dependencies>
 </ivy-module>
