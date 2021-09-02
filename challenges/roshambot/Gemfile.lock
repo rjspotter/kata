@@ -44,7 +44,6 @@ GEM
       nokogiri (= 1.5.10)
       rake
       rdoc
-    json (1.8.0)
     jwt (0.1.8)
       multi_json (>= 1.5)
     listen (1.2.2)
@@ -75,8 +74,7 @@ GEM
       ffi (>= 0.5.0)
     rb-kqueue (0.2.0)
       ffi (>= 0.5.0)
-    rdoc (4.0.1)
-      json (~> 1.4)
+    rdoc (6.3.2)
     rspec (2.14.1)
       rspec-core (~> 2.14.0)
       rspec-expectations (~> 2.14.0)
